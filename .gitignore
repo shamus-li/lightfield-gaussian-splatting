@@ -1,0 +1,71 @@
+# Python and native build files
+__pycache__/
+*.py[codz]
+*.so
+build/
+dist/
+*.egg-info/
+
+# Local environments and tool caches
+.env
+.env.*
+.envrc
+.venv/
+env/
+venv/
+.envs/
+models/
+.torch_extensions/
+.playwright-cli/
+.ruff_cache/
+.cache/
+.pytest_cache/
+/tests/
+
+# Local planning, scratch, and scheduler state
+AGENTS.md
+/slurm-*.out
+/slurm_logs/
+wandb/
+runs/
+logs/
+tensorboard/
+snapshot_*.dump
+.nfs*
+
+# Editor and OS state
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# External source and generated submodule state
+submodules/dycheck.incomplete-*/
+submodules/gsplat/baselines/
+/submodules/**/build/
+/submodules/**/*.egg-info/
+/submodules/**/__pycache__/
+/submodules/**/.pytest_cache/
+/submodules/**/.ruff_cache/
+/submodules/**/*.so
+
+# External Blender assets
+/blender/
+*.blend
+
+# External data and generated outputs
+/.external-assets
+/datasets/
+/data/*
+/baselines/
+/outputs
+/renders/
+/checkpoints/
+*.ckpt
+*.pt
+*.pth
+*.safetensors
+*.onnx
+*.ply
+*.npy
+*.npz

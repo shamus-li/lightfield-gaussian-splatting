@@ -1,0 +1,39 @@
+[submodule "submodules/vggt"]
+	path = submodules/vggt
+	url = https://github.com/shamus-li/vggt.git
+[submodule "submodules/4DGaussians"]
+	path = submodules/4DGaussians
+	url = https://github.com/shamus-li/4DGaussians.git
+[submodule "submodules/Difix3D"]
+	path = submodules/Difix3D
+	url = https://github.com/shamus-li/Difix3D.git
+[submodule "submodules/gsplat"]
+	path = submodules/gsplat
+	url = https://github.com/shamus-li/gsplat.git
+[submodule "submodules/FSGS"]
+	path = submodules/FSGS
+	url = https://github.com/shamus-li/FSGS.git
+[submodule "submodules/SparseGS"]
+	path = submodules/SparseGS
+	url = https://github.com/shamus-li/SparseGS.git
+[submodule "submodules/dycheck"]
+	path = submodules/dycheck
+	url = https://github.com/shamus-li/dycheck.git
+[submodule "submodules/mega-sam"]
+	path = submodules/mega-sam
+	url = https://github.com/mega-sam/mega-sam.git
+[submodule "submodules/hardware-gaussians"]
+	path = submodules/hardware-gaussians
+	url = https://github.com/shamus-li/plenoxelsDiffusercam.git
+[submodule "submodules/diff-gaussian-rasterization"]
+	path = submodules/diff-gaussian-rasterization
+	url = https://github.com/graphdeco-inria/diff-gaussian-rasterization.git
+[submodule "submodules/simple-knn"]
+	path = submodules/simple-knn
+	url = https://gitlab.inria.fr/bkerbl/simple-knn.git
+[submodule "submodules/dinov2"]
+	path = submodules/dinov2
+	url = https://github.com/facebookresearch/dinov2.git
+[submodule "submodules/MiDaS"]
+	path = submodules/MiDaS
+	url = https://github.com/isl-org/MiDaS.git
