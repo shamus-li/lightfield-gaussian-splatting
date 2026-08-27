@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="description"
+        content="Our results demonstrate that using multiple cameras—even with a low baseline—significantly improves reconstruction quality in single-shot, few-shot, and casual video settings.">
+  <meta name="keywords"
+        content="multi-view cameras, Gaussian splatting, novel view synthesis, light fields, dynamic reconstruction">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Sparse Light Field Sampling Improves Casual 3D and 4D Reconstruction">
+  <meta property="og:description"
+        content="Our results demonstrate that using multiple cameras—even with a low baseline—significantly improves reconstruction quality in single-shot, few-shot, and casual video settings.">
+  <meta property="og:url" content="https://shamus.li/lightfield-gaussian-splatting/">
+  <meta property="og:image"
+        content="https://shamus.li/lightfield-gaussian-splatting/static/1-teaser.png">
+  <meta property="og:image:width" content="2200">
+  <meta property="og:image:height" content="699">
+  <meta property="og:image:alt"
+        content="Static and dynamic reconstructions comparing monocular and synchronized multi-view inputs.">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Sparse Light Field Sampling Improves Casual 3D and 4D Reconstruction">
+  <meta name="twitter:description"
+        content="Our results demonstrate that using multiple cameras—even with a low baseline—significantly improves reconstruction quality in single-shot, few-shot, and casual video settings.">
+  <meta name="twitter:image"
+        content="https://shamus.li/lightfield-gaussian-splatting/static/1-teaser.png">
+  <title>Sparse Light Field Sampling Improves Casual 3D and 4D Reconstruction</title>
+
+  <link rel="canonical" href="https://shamus.li/lightfield-gaussian-splatting/">
+  <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+  <link rel="stylesheet" href="./static/index.css">
+
+  <link rel="icon" href="./static/favicon-96x96.png" sizes="96x96" type="image/png">
+  <link rel="icon" href="./static/favicon.svg" type="image/svg+xml">
+  <link rel="shortcut icon" href="./static/favicon.ico">
+  <link rel="apple-touch-icon" href="./static/apple-touch-icon.png" sizes="180x180">
+</head>
+
+<body>
+  <section class="hero publication-header">
+    <div class="hero-body">
+      <div class="container is-max-desktop">
+        <div class="columns is-centered">
+          <div class="column has-text-centered">
+            <h1 class="title is-1 publication-title">
+              Sparse Light Field Sampling Improves Casual 3D and 4D Reconstruction
+            </h1>
+
+            <div class="is-size-5 publication-authors">
+              <span class="author-block"><a href="https://shamus.li">Shamus Li</a><sup>1</sup>,</span>
+              <span class="author-block"><a href="https://rmcao.net/">Ruiming Cao</a><sup>2</sup>,</span>
+              <span class="author-block"><a href="https://www.laurawaller.com/">Laura Waller</a><sup>3</sup>,</span>
+              <span class="author-block"><a href="https://kristinamonakhova.com/">Kristina Monakhova</a><sup>1</sup>,</span>
+              <span class="author-block"><a href="https://sarafridov.github.io/">Sara Fridovich-Keil</a><sup>4</sup></span>
+            </div>
+
+            <div class="is-size-5 publication-authors publication-affiliations">
+              <span class="author-block"><sup>1</sup>Cornell University,</span>
+              <span class="author-block"><sup>2</sup>Adobe,</span>
+              <span class="author-block"><sup>3</sup>UC Berkeley,</span>
+              <span class="author-block"><sup>4</sup>Georgia Tech</span>
+            </div>
+
+            <div class="column has-text-centered">
+              <div class="publication-links">
+                <span class="link-block">
+                  <a href="http://arxiv.org/abs/2608.20602"
+                     class="external-link button is-normal is-rounded is-dark">
+                    <span>arXiv</span>
+                  </a>
+                </span>
+                <span class="link-block">
+                  <a href="https://github.com/shamus-li/lightfield-gaussian-splatting"
+                     class="external-link button is-normal is-rounded is-dark">
+                    <span>Code</span>
+                  </a>
+                </span>
+                <span class="link-block">
+                  <a href="https://drive.google.com/drive/folders/1D68RDdv5NK0_aY1kH_39CO9IjxuJBWja?usp=sharing"
+                     class="external-link button is-normal is-rounded is-dark">
+                    <span>Dataset</span>
+                  </a>
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="hero teaser">
+    <div class="container is-max-desktop">
+      <div class="hero-body">
+        <figure class="publication-figure">
+          <img src="./static/1-teaser.png"
+               width="2200" height="699" fetchpriority="high"
+               alt="A static casual capture and a fixed-camera dynamic capture comparing monocular and synchronized multi-view inputs.">
+          <figcaption>
+            <strong>Sparse light field sampling.</strong> In a casual-capture reconstruction of a static scene
+            (<em>left</em>), each exposure of a multi-view device records several viewpoints of the same scene state,
+            recovering better geometry. Similarly, with a stationary camera observing a dynamic scene
+            (<em>right</em>), a monocular sensor records a single viewpoint per timestep and cannot distinguish motion
+            from geometry, while synchronized cameras observe each scene state from multiple angles to break this
+            ambiguity.
+          </figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="abstract">
+    <div class="container is-max-desktop">
+      <div class="columns is-centered has-text-centered">
+        <div class="column is-four-fifths">
+          <h2 class="title is-3">Abstract</h2>
+          <div class="content has-text-justified">
+            <p>
+              Many consumer smartphones, stereo cameras, and light field cameras record multiple synchronized
+              viewpoints in a single exposure event. However, novel view synthesis pipelines commonly use only a
+              monocular stream and rely on camera motion or learned priors to obtain angular coverage. In this paper,
+              we ask: why do we use only one viewpoint? We analyze <em>sensor-limited multi-view</em>, where one sensor
+              trades off spatial and angular resolution, and <em>exposure-limited multi-view</em>, where multiple
+              sensors on one commodity device observe each event simultaneously. We introduce a new dataset
+              incorporating three types of commodity multi-view cameras, and evaluate sparse-view 3DGS and 4DGS
+              baselines measuring reconstruction quality as a function of number of exposures and angle between
+              extreme views. Our results demonstrate that using multiple cameras—even with a low baseline—significantly
+              improves reconstruction quality in single-shot, few-shot, and casual video settings. In addition, under
+              a fixed sensor budget, angular sampling improves reconstruction when exposures are scarce despite lower
+              spatial resolution. The gains are most pronounced for single-shot and dynamic scenes, where a stationary
+              monocular camera lacks the angular diversity to recover scene geometry and motion.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="dataset">
+    <div class="container is-max-desktop">
+      <div class="columns is-centered has-text-centered">
+        <div class="column is-four-fifths">
+          <h2 class="title is-3">Multi-View Dataset</h2>
+          <div class="content has-text-justified">
+            <p>
+              Because no dataset compares multiple camera types on the same scenes, we collect and release two
+              real-world datasets comprising 16 scenes (8 static, 8 dynamic). Each scene is captured by an iPhone
+              15 Pro (3 views per exposure), an Apple Vision Pro (stereo), and a Lytro Illum light field camera
+              (81 views per exposure).
+            </p>
+          </div>
+          <figure class="publication-figure">
+            <img src="./static/example-input-images.png"
+                 width="2200" height="499" loading="lazy" decoding="async"
+                 alt="Single-exposure measurements from monocular, iPhone, stereo, light field, and multiplexed camera models.">
+            <figcaption>
+              <strong>Single-exposure measurements from each camera model.</strong> Sensor-limited cameras (light
+              field, multiplexed) divide one fixed sensor between spatial and angular sampling, whereas
+              exposure-limited cameras (iPhone, stereo) add full-resolution synchronized sensors per exposure.
+            </figcaption>
+          </figure>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="synthetic-results">
+    <div class="container is-max-desktop">
+      <div class="columns is-centered has-text-centered">
+        <div class="column is-four-fifths">
+          <h2 class="title is-3">Synthetic Analysis</h2>
+          <div class="content has-text-justified">
+            <p>
+              Both light field cameras outperform monocular capture under the same sensor budget when exposures
+              are scarce. This demonstrates that angular diversity outweighs spatial resolution when views are
+              limited. Multiplexing further improves performance, even when the additional spatial resolution is
+              achieved through overlapping. As the number of exposures grows, all designs converge in performance.
+            </p>
+          </div>
+          <figure class="publication-figure">
+            <img src="./static/3-synthetic-lightfield.png"
+                 width="2200" height="706" loading="lazy" decoding="async"
+                 alt="Sensor-limited synthetic plots and qualitative results for monocular, light field, and multiplexed cameras.">
+            <figcaption>
+              <strong>Sensor-limited synthetic analysis.</strong> With a single exposure (<em>left</em>), both light
+              field designs outperform the monocular camera, with the benefit growing as the angular baseline
+              increases. As the number of exposures increases (<em>center</em>), all cameras converge in performance.
+              In the reconstructions (<em>right</em>), angular sampling suppresses errors despite lower per-view
+              resolution.
+            </figcaption>
+          </figure>
+          <figure class="publication-figure">
+            <img src="./static/4-synthetic-exposure.png"
+                 width="2200" height="707" loading="lazy" decoding="async"
+                 alt="Exposure-limited synthetic plots and qualitative results for monocular, iPhone, and stereo cameras.">
+            <figcaption>
+              <strong>Exposure-limited synthetic analysis.</strong> With a single exposure (<em>left</em>), the
+              benefits of multi-view cameras grow as the angular baseline increases. As the number of exposures
+              increases (<em>center</em>), all cameras converge in performance.
+            </figcaption>
+          </figure>
+          <div class="content has-text-justified">
+            <p>
+              To evaluate geometric fidelity, we compare predicted depth against ground truth on the NeRF Synthetic
+              scenes. All four light field sampling cameras reduce geometric error relative to monocular capture at
+              both exposure counts, with the largest improvement provided by the light field and multiplexed light
+              field models.
+            </p>
+          </div>
+          <figure class="publication-figure">
+            <img src="./static/synthetic-depth.png"
+                 width="2200" height="862" loading="lazy" decoding="async"
+                 alt="Ground-truth and predicted chair depth for monocular, iPhone, stereo, light field, and multiplexed models with one and three viewpoints.">
+            <figcaption>
+              <strong>Predicted depth on the <em>chair</em> scene.</strong> Ground truth and predicted depth for one
+              exposure (<em>top</em>) and three exposures (<em>bottom</em>). The multi-view models recover more
+              coherent depth than the monocular reconstruction.
+            </figcaption>
+          </figure>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="static-results">
+    <div class="container is-max-desktop">
+      <div class="columns is-centered has-text-centered">
+        <div class="column is-four-fifths">
+          <h2 class="title is-3">Real-World Static Scenes</h2>
+          <div class="content has-text-justified">
+            <p>
+              We reconstruct the static scenes in our dataset from a single exposure per camera and compare each
+              device against its own monocular baseline on held-out evaluation views.
+            </p>
+          </div>
+          <figure class="publication-figure">
+            <img src="./static/5-static-lightfield.png"
+                 width="2200" height="688" loading="lazy" decoding="async"
+                 alt="Real single-exposure Lytro reconstruction comparing monocular and light field inputs across 3DGS, FSGS, and SparseGS.">
+            <figcaption>
+              <strong>Real, single-exposure reconstruction (sensor-limited).</strong> We reconstruct a scene from one
+              Lytro exposure using either one monocular view or 81 smaller sub-views. The additional angular
+              samples from the same exposure recover structure that the center view leaves underdetermined, and this
+              benefit complements sparse-view methods that incorporate learned priors.
+            </figcaption>
+          </figure>
+          <figure class="publication-figure">
+            <img src="./static/6-static-exposure.png"
+                 width="2200" height="680" loading="lazy" decoding="async"
+                 alt="Real single-exposure reconstructions from monocular, iPhone, and stereo inputs.">
+            <figcaption>
+              <strong>Real single-exposure reconstruction (exposure-limited).</strong> Synchronized views sharpen
+              geometry for both the iPhone and stereo cameras.
+            </figcaption>
+          </figure>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="casual-results">
+    <div class="container is-max-desktop">
+      <div class="columns is-centered has-text-centered">
+        <div class="column is-four-fifths">
+          <h2 class="title is-3">Casual Video Reconstruction</h2>
+          <div class="content has-text-justified">
+            <p>
+              Both multi-view cameras show improvements over their monocular counterparts. The gains are smaller
+              than in the single-exposure and dynamic settings, which is expected: the value of multi-camera input
+              is largest in regimes where monocular capture is most constrained, and smallest when casual video
+              already supplies sufficient angular diversity.
+            </p>
+          </div>
+          <figure class="publication-figure">
+            <img src="./static/7-casual-iphone.png"
+                 width="2200" height="680" loading="lazy" decoding="async"
+                 alt="Casual video results comparing monocular and multi-view reconstruction with and without Difix3D+.">
+            <figcaption>
+              <strong>Casual video reconstruction.</strong> We reconstruct a handheld capture from the monocular
+              stream and from all synchronized views, with and without the Difix3D+ prior. Camera motion already
+              supplies angular diversity, so multi-view gains are modest, and either added views or the prior can
+              repair the monocular ghosting.
+            </figcaption>
+          </figure>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="dynamic-results">
+    <div class="container is-max-desktop">
+      <div class="columns is-centered has-text-centered">
+        <div class="column is-four-fifths dynamic-copy">
+          <h2 class="title is-3">Dynamic Reconstruction</h2>
+          <div class="content has-text-justified">
+            <p>
+              We reconstruct each dynamic scene using 4DGS, comparing each device's multi-view stream against its own
+              monocular stream. The gains are largest in this setting because sequential monocular exposures observe
+              different scene states. Monocular input smears motion, whereas synchronized multi-camera input recovers
+              geometry and dynamics.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="dynamic-videos">
+        <div class="dynamic-video-group">
+          <h3 class="title is-4">Fidget Spinner</h3>
+          <div class="video-comparison">
+            <div class="video-triplet">
+              <figure class="video-result">
+                <figcaption>Ground truth</figcaption>
+                <video class="result-video" playsinline autoplay loop muted preload="auto">
+                  <source src="./static/spinner_stereo_ground_truth.mp4" type="video/mp4">
+                </video>
+              </figure>
+              <figure class="video-result">
+                <figcaption>Monocular</figcaption>
+                <video class="result-video" playsinline autoplay loop muted preload="auto">
+                  <source src="./static/spinner_stereo_monocular.mp4" type="video/mp4">
+                </video>
+              </figure>
+              <figure class="video-result">
+                <figcaption>Stereo</figcaption>
+                <video class="result-video" playsinline autoplay loop muted preload="auto">
+                  <source src="./static/spinner_stereo_multiview.mp4" type="video/mp4">
+                </video>
+              </figure>
+            </div>
+            <div class="video-triplet video-triplet--iphone">
+              <figure class="video-result">
+                <figcaption>Ground truth</figcaption>
+                <video class="result-video" playsinline autoplay loop muted preload="auto">
+                  <source src="./static/spinner_iphone_ground_truth.mp4" type="video/mp4">
+                </video>
+              </figure>
+              <figure class="video-result">
+                <figcaption>Monocular</figcaption>
+                <video class="result-video" playsinline autoplay loop muted preload="auto">
+                  <source src="./static/spinner_iphone_monocular.mp4" type="video/mp4">
+                </video>
+              </figure>
+              <figure class="video-result">
+                <figcaption>iPhone</figcaption>
+                <video class="result-video" playsinline autoplay loop muted preload="auto">
+                  <source src="./static/spinner_iphone_multiview.mp4" type="video/mp4">
+                </video>
+              </figure>
+            </div>
+          </div>
+        </div>
+
+        <div class="dynamic-video-group">
+          <h3 class="title is-4">Scissors</h3>
+          <div class="video-comparison">
+            <div class="video-triplet">
+              <figure class="video-result">
+                <figcaption>Ground truth</figcaption>
+                <video class="result-video" playsinline autoplay loop muted preload="auto">
+                  <source src="./static/scissors_stereo_ground_truth.mp4" type="video/mp4">
+                </video>
+              </figure>
+              <figure class="video-result">
+                <figcaption>Monocular</figcaption>
+                <video class="result-video" playsinline autoplay loop muted preload="auto">
+                  <source src="./static/scissors_stereo_monocular.mp4" type="video/mp4">
+                </video>
+              </figure>
+              <figure class="video-result">
+                <figcaption>Stereo</figcaption>
+                <video class="result-video" playsinline autoplay loop muted preload="auto">
+                  <source src="./static/scissors_stereo_multiview.mp4" type="video/mp4">
+                </video>
+              </figure>
+            </div>
+            <div class="video-triplet video-triplet--iphone">
+              <figure class="video-result">
+                <figcaption>Ground truth</figcaption>
+                <video class="result-video" playsinline autoplay loop muted preload="auto">
+                  <source src="./static/scissors_iphone_ground_truth.mp4" type="video/mp4">
+                </video>
+              </figure>
+              <figure class="video-result">
+                <figcaption>Monocular</figcaption>
+                <video class="result-video" playsinline autoplay loop muted preload="auto">
+                  <source src="./static/scissors_iphone_monocular.mp4" type="video/mp4">
+                </video>
+              </figure>
+              <figure class="video-result">
+                <figcaption>iPhone</figcaption>
+                <video class="result-video" playsinline autoplay loop muted preload="auto">
+                  <source src="./static/scissors_iphone_multiview.mp4" type="video/mp4">
+                </video>
+              </figure>
+            </div>
+          </div>
+        </div>
+
+        <div class="dynamic-video-group">
+          <h3 class="title is-4">Rolling Ball</h3>
+          <div class="video-comparison">
+            <div class="video-triplet">
+              <figure class="video-result">
+                <figcaption>Ground truth</figcaption>
+                <video class="result-video" playsinline autoplay loop muted preload="auto">
+                  <source src="./static/balls_stereo_ground_truth.mp4" type="video/mp4">
+                </video>
+              </figure>
+              <figure class="video-result">
+                <figcaption>Monocular</figcaption>
+                <video class="result-video" playsinline autoplay loop muted preload="auto">
+                  <source src="./static/balls_stereo_monocular.mp4" type="video/mp4">
+                </video>
+              </figure>
+              <figure class="video-result">
+                <figcaption>Stereo</figcaption>
+                <video class="result-video" playsinline autoplay loop muted preload="auto">
+                  <source src="./static/balls_stereo_multiview.mp4" type="video/mp4">
+                </video>
+              </figure>
+            </div>
+            <div class="video-triplet video-triplet--iphone">
+              <figure class="video-result">
+                <figcaption>Ground truth</figcaption>
+                <video class="result-video" playsinline autoplay loop muted preload="auto">
+                  <source src="./static/balls_iphone_ground_truth.mp4" type="video/mp4">
+                </video>
+              </figure>
+              <figure class="video-result">
+                <figcaption>Monocular</figcaption>
+                <video class="result-video" playsinline autoplay loop muted preload="auto">
+                  <source src="./static/balls_iphone_monocular.mp4" type="video/mp4">
+                </video>
+              </figure>
+              <figure class="video-result">
+                <figcaption>iPhone</figcaption>
+                <video class="result-video" playsinline autoplay loop muted preload="auto">
+                  <source src="./static/balls_iphone_multiview.mp4" type="video/mp4">
+                </video>
+              </figure>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="prototype">
+    <div class="container is-max-desktop">
+      <div class="columns is-centered has-text-centered">
+        <div class="column is-four-fifths">
+          <h2 class="title is-3">Multiplexed Light Field Prototype</h2>
+          <div class="content has-text-justified">
+            <p>
+              We build a multiplexed light field camera in which higher-resolution sub-lens images overlap on the
+              sensor. On real captures, it outperforms both monocular and standard light field capture from a single
+              exposure, illustrating the benefit of joint camera and reconstruction design.
+            </p>
+          </div>
+          <figure class="publication-figure">
+            <img src="./static/9-multiplexed-result.png"
+                 width="2200" height="937" loading="lazy" decoding="async"
+                 alt="Multiplexed light field prototype, sensor configurations, input images, and held-out rendered views.">
+            <figcaption>
+              <strong>Multiplexed light field.</strong> We capture a scene with our prototype (<em>left</em>) using
+              monocular, light field, and multiplexed configurations (<em>middle</em>), and render held-out novel
+              views from each single-exposure reconstruction (<em>right</em>). The multiplexed camera recovers
+              geometry that monocular capture cannot, and retains detail that the non-overlapping light field loses
+              to reduced per-view resolution.
+            </figcaption>
+          </figure>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="BibTeX">
+    <div class="container is-max-desktop content">
+      <h2 class="title">BibTeX</h2>
+      <pre><code>@inproceedings{li2026sparse,
+  author    = {Li, Shamus and Cao, Ruiming and Waller, Laura and
+               Monakhova, Kristina and Fridovich-Keil, Sara},
+  title     = {Sparse Light Field Sampling Improves Casual {3D} and {4D} Reconstruction},
+  booktitle = {Computer Vision -- {ECCV} 2026 Workshops},
+  year      = {2026},
+}</code></pre>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="columns is-centered">
+        <div class="column is-8">
+          <div class="content">
+            <p>
+              The site source is based on the
+              <a href="https://nerfies.github.io/">Nerfies project page</a>.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+</body>
+
+</html>

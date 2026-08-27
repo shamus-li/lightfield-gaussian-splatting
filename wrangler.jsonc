@@ -1,0 +1,19 @@
+{
+  "name": "lightfield-gaussian-splatting",
+  "main": "scripts/site-worker.js",
+  "compatibility_date": "2026-08-17",
+  "workers_dev": false,
+  "preview_urls": false,
+  "routes": [
+    {
+      "pattern": "shamus.li/lightfield-gaussian-splatting*",
+      "zone_name": "shamus.li"
+    }
+  ],
+  "assets": {
+    "directory": "./docs",
+    "binding": "ASSETS",
+    "run_worker_first": true,
+    "html_handling": "auto-trailing-slash"
+  }
+}
